@@ -1,2 +1,2 @@
 #!/bin/bash
-./execute.sh "masm $1;"
+./execute.sh "masm $@"
