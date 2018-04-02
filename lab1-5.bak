@@ -42,7 +42,7 @@ extern qstrlen:near
 extern qstrcmp:near
 extern qstrfcmp:near
 extern qstrprint:near
-extern qprintword:near
+extern qprintbyte:near
 extern qfmtprint:near
 extern qgets:near
 extern exit:near
@@ -169,10 +169,7 @@ admin_mode:
     imul cx
     mov cx,ax
     mov ax,dx
-    push dx
-    mov dx,0
     idiv cx
-    pop dx
     mov word ptr[pr1],ax
     lea bx,offset shop2goods
 shop2_search_loop:
@@ -227,18 +224,12 @@ admin_mode_continue:
     imul cx
     mov cx,ax
     mov ax,dx
-    push dx
-    mov dx,0
     idiv cx
-    pop dx
     mov word ptr[pr2],ax
     mov cx,word ptr[pr1]
     add ax,cx
     mov cx,2
-    push dx
-    mov dx,0
     idiv cx
-    pop dx
     mov word ptr[avgpr],ax
     cmp ax,90
     jge class_a

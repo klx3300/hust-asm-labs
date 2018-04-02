@@ -11,6 +11,11 @@ incorrect_hint db 'Username and Password Mismatch!',10,0
 correct_hint db 'Authentication Succeed!',10,0
 guest_hint db 'You are in Guest Mode!',10,0
 good_not_exist_hint db 'The good you ask is not exist!',10,0
+price_hint db 'Current Price: ',0
+stock_hint db 'Current Stock: ',0
+stock_hint_suffix db ' pcs.',0
+profit_pctg_suffix db '%',0
+profit_rank_hint db 'Rank: ',0
 quit_str db 'q',0
 username db 'Huatian Zhou',0
 password db 'testpasswd',0
@@ -143,6 +148,30 @@ shop1_found:
     jnz admin_mode
     push bx
     call near ptr qstrprint
+    call near ptr qstrlen
+    sub sp,-2
+    call near ptr newline
+    push offset price_hint
+    call near ptr qstrprint
+    sub sp,-2
+    add bx,ax
+    inc bx
+    mov cx,word ptr[bx+2]
+    push cx
+    call near ptr qprintword
+    sub sp,-2
+    call near ptr newline
+    push offset stock_hint
+    call near ptr qstrprint
+    sub sp,-2
+    mov cx,word ptr[bx+4]
+    mov dx,word ptr[bx+6]
+    sub cx,dx
+    push cx
+    call near ptr qprintword
+    sub sp,-2
+    push offset stock_hint_suffix
+    call near ptr qstrprint
     sub sp,-2
     call near ptr newline
     jmp query_goods
@@ -155,24 +184,23 @@ admin_mode:
     mov ax,word ptr[bx+2]
     mov cx,word ptr[bx+6]
     imul cx
-    mov dx,ax
+    mov si,ax
     mov ax,word ptr[bx]
     mov cx,word ptr[bx+4]
     imul cx
-    sub dx,ax
-    mov ax,dx
+    sub si,ax
+    mov ax,si
     mov cx,100
     imul cx
-    mov dx,ax
+    push dx
+    mov si,ax
     mov ax,word ptr[bx]
     mov cx,word ptr[bx+4]
     imul cx
     mov cx,ax
-    mov ax,dx
-    push dx
-    mov dx,0
-    idiv cx
+    mov ax,si
     pop dx
+    idiv cx
     mov word ptr[pr1],ax
     lea bx,offset shop2goods
 shop2_search_loop:
@@ -213,33 +241,40 @@ admin_mode_continue:
     mov ax,word ptr[bx+2]
     mov cx,word ptr[bx+6]
     imul cx
-    mov dx,ax
+    mov si,ax
     mov ax,word ptr[bx]
     mov cx,word ptr[bx+4]
     imul cx
-    sub dx,ax
-    mov ax,dx
+    sub si,ax
+    mov ax,si
     mov cx,100
     imul cx
-    mov dx,ax
+    push dx
+    mov si,ax
     mov ax,word ptr[bx]
     mov cx,word ptr[bx+4]
     imul cx
     mov cx,ax
-    mov ax,dx
-    push dx
-    mov dx,0
-    idiv cx
+    mov ax,si
     pop dx
+    idiv cx
     mov word ptr[pr2],ax
     mov cx,word ptr[pr1]
     add ax,cx
+    cwd
     mov cx,2
-    push dx
-    mov dx,0
     idiv cx
-    pop dx
     mov word ptr[avgpr],ax
+    push ax
+    call near ptr qprintword
+    sub sp,-2
+    push offset profit_pctg_suffix
+    call near ptr qstrprint
+    sub sp,-2
+    call near ptr newline
+    push offset profit_rank_hint
+    call near ptr qstrprint
+    sub sp,-2
     cmp ax,90
     jge class_a
     cmp ax,50

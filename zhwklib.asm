@@ -1,22 +1,26 @@
 .386
+retsize equ 2
 public qmemset ;param list: word addr, word size, byte content
 public qmemcpy ;param list: word dstaddr, word srcaddr, word size
 public qstrlen ;param list: word straddr; return ax:length
 public qstrcmp ;param list: word strAaddr, word strBaddr; return al: first differ
 public qstrfcmp ;param list: word strAaddr, word strBaddr; return al: first differ
 public qstrprint ;param list: word straddr
-public qprintbyte ; param list byte
+public qprintword ; param list byte
 public qfmtprint ;param list: word fmtstraddr, ...; return ax: succeed length
+public qgets ; param list: word bufferaddr
+public exit
+public newline
 code segment para public use16
-qmemset proc
+qmemset proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
+    mov bx,word ptr[bp+retsize+2]
     push ax
-    mov ax,word ptr[bp+8]
+    mov ax,word ptr[bp+retsize+4]
     push cx
-    mov cl,byte ptr[bp+10]
+    mov cl,byte ptr[bp+retsize+6]
     cmp ax,0
     jz _qmemset_exit
 _qmemset_loop:
@@ -31,20 +35,20 @@ _qmemset_exit:
     pop bp
     ret
 qmemset endp
-qmemcpy proc
+qmemcpy proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
+    mov bx,word ptr[bp+retsize+2]
     push di
-    mov di,word ptr[bp+8]
+    mov di,word ptr[bp+retsize+4]
     push ax
-    mov ax,word ptr[bp+10]
+    mov ax,word ptr[bp+retsize+6]
     cmp ax,0
     jz _qmemcpy_exit
 _qmemcpy_loop:
-    mov byte ptr[di],dl
-    mov dl,byte ptr[bx]
+    mov dl,byte ptr[di]
+    mov byte ptr[bx],dl
     inc bx
     inc di
     dec ax
@@ -56,16 +60,16 @@ _qmemcpy_exit:
     pop bp
     ret
 qmemcpy endp
-qstrlen proc
+qstrlen proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
+    mov bx,word ptr[bp+retsize+2]
     push si
     mov si,0
     push dx
 _qstrlen_loop:
-    mov byte ptr[bx+si],dl
+    mov dl,byte ptr[bx+si]
     cmp dl,0
     jz _qstrlen_exit
     inc si
@@ -78,12 +82,13 @@ _qstrlen_exit:
     pop bp
     ret
 qstrlen endp
-qstrcmp proc
+qstrcmp proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
-    mov si,word ptr[bp+8]
+    push si
+    mov bx,word ptr[bp+retsize+2]
+    mov si,word ptr[bp+retsize+4]
     push cx
 _qstrcmp_loop:
     mov cl,byte ptr[bx]
@@ -107,32 +112,33 @@ _qstrcmp_diffend:
     jmp _qstrcmp_exit
 _qstrcmp_exit:
     pop cx
+    pop si
     pop bx
     pop bp
     ret
 qstrcmp endp
-qstrfcmp proc
+qstrfcmp proc near
     push bp
     mov bp,sp
     push bx
     push si
-    push ax
     push cx
     push dx
     mov ax,0
-    mov bx,word ptr[bp+6]
-    mov si,word ptr[bp+8]
+    mov bx,word ptr[bp+retsize+2]
+    mov si,word ptr[bp+retsize+4]
     push si
     push bx
-    call word ptr qstrcmp
+    call qstrcmp
+    sub sp,-4
     cmp ax,0
     jnz _qstrfcmp_fail
     push bx
-    call word ptr qstrlen
+    call qstrlen
     sub sp,-2
     mov cx,ax
     push si
-    call word ptr qstrlen
+    call qstrlen
     sub sp,-2
     mov dx,ax
     sub cx,dx
@@ -143,98 +149,88 @@ qstrfcmp proc
 _qstrfcmp_fail:
     pop dx
     pop cx
-    pop ax
     pop si
     pop bx
     pop bp
     ret
 qstrfcmp endp
-qstrprint proc
+qstrprint proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
+    mov bx,word ptr[bp+retsize+2]
     push dx
+    push ax
 _qstrprint_loop:
-    mov byte ptr[bx],dl
+    mov dl,byte ptr[bx]
     cmp dl,0
     jz _qstrprint_exit
-    mov ah,05h
+    mov ah,02h
     int 21h
+    inc bx
     jmp _qstrprint_loop
 _qstrprint_exit:
+    pop ax
     pop dx
     pop bx
     pop bp
     ret
 qstrprint endp
-qprintbyte proc
+qprintword proc near
     push bp
     mov bp,sp
     push ax
-    mov ax,word ptr[bp+6]
+    mov ax,word ptr[bp+retsize+2]
     push bx
     mov bx,0 ; status accumulator
     push dx
     push cx
+    mov cx,0
+    mov dx,0
     cmp ax,0
-    jg _printbyte_skip_neg
+    jge _qprintword_skip_neg
     neg ax
     push dx
     mov dl,'-'
     push ax
-    mov ah,05h
+    mov ah,02h
     int 21h
     pop ax
     pop dx
-_printbyte_skip_neg:
-    push bx
+_qprintword_skip_neg:
     mov bx,10
     div bx
-    pop bx
-    push ax
-    inc bx
-    mov ax,dx
-    cmp dx,0
-    jnz _printbyte_skip_neg
-    add bx,6
-    mov cx,6
-    push bp
-    mov bp,sp
-_printbyte_prloop:
-    cmp cx,bx
-    jz _printbyte_stop
     push dx
-    push di
-    mov di,cx
-    mov dl,byte ptr[bp+di]
-    pop di
-    add dl,'0'
-    push ax
-    mov ax,05h
-    int 21h
-    pop ax
-    pop dx
+    mov dx,0
     inc cx
-    jmp _printbyte_prloop
-_printbyte_stop:
-    pop bp
-    sub bx,6
-    add sp,bx
+    cmp ax,bx
+    jge _qprintword_skip_neg
+    push ax
+    inc cx
+_qprintword_prloop:
+    cmp cx,0
+    jz _qprintword_stop
+    pop dx
+    add dl,'0'
+    mov ah,02h
+    int 21h
+    dec cx
+    jmp _qprintword_prloop
+_qprintword_stop:
     pop cx
     pop dx
     pop bx
     pop ax
     pop bp
 ret
-qprintbyte endp
-qfmtprint proc
+qprintword endp
+qfmtprint proc near
     push bp
     mov bp,sp
     push bx
-    mov bx,word ptr[bp+6]
+    mov bx,word ptr[bp+retsize+2]
     push di
-    mov di,8 ; parameter accumulator
+    mov di,4 ; parameter accumulator
     mov ax,0 ; output chars amount accumulator
     push cx
     mov cx,0 ; state recorder: classic printf is a state machine!
@@ -258,7 +254,7 @@ _qfmtprint_mainloop:
     jmp _qfmtprint_mainloop
 _qfmtprint_normout:
     push ax
-    mov ah,05h
+    mov ah,02h
     int 21h
     pop ax
     jmp _qfmtprint_mainloop
@@ -279,21 +275,21 @@ _qfmtprint_format:
     jz _qfmtprint_printpct
     ; none match..
     push ax
-    mov ah,05h
+    mov ah,02h
     int 21h
     pop ax
     jmp _qfmtprint_mainloop
 _qfmtprint_printchar:
     ; we can safely use edx now, since it's already used up
-    mov dl,byte ptr[bp+di]
-    add di,1
+    mov dx,word ptr[bp+retsize+di]
+    add di,2
     push ax
-    mov ah,05h
+    mov ah,02h
     int 21h
     pop ax
     jmp _qfmtprint_mainloop
 _qfmtprint_printstr:
-    mov dx,word ptr[bp+di]
+    mov dx,word ptr[bp+retsize+di]
     add di,2
     push dx
     call qstrprint
@@ -301,7 +297,7 @@ _qfmtprint_printstr:
     jmp _qfmtprint_mainloop
 _qfmtprint_printpct:
     push ax
-    mov ah,05h
+    mov ah,02h
     int 21h
     pop ax
     jmp _qfmtprint_mainloop
@@ -326,5 +322,72 @@ _qfmtprint_end:
     pop bp
     ret
 qfmtprint endp
+qgets proc near
+    push bp
+    mov bp,sp
+    push cx
+    mov cx,ds
+    push ax
+    push bx
+    mov bx,word ptr[bp+retsize+2]
+    push si
+    push di
+    push dx
+    sub sp,100
+    mov si,sp
+    mov byte ptr ss:[si],98
+    mov byte ptr ss:[si+1],0
+    mov dx,sp
+    mov ax,ss
+    mov ds,ax
+    mov ah,0AH
+    int 21H
+    mov ds,cx
+    mov di,0
+    mov ax,0
+    mov al,byte ptr ss:[si+1]
+    mov di,ax
+    add di,2
+    push bx
+    mov bx,di
+    mov byte ptr ss:[si+bx],0
+    pop bx
+    inc ax
+    add si,2
+_qgets_cploop:
+    mov dl,byte ptr ss:[si]
+    mov byte ptr[bx],dl
+    inc si
+    inc bx
+    dec ax
+    jnz _qgets_cploop
+    sub sp,-100
+    mov dl,10
+    mov ah,02H
+    int 21H
+    pop dx
+    pop di
+    pop si
+    pop bx
+    pop ax
+    pop cx
+    pop bp
+    ret
+qgets endp
+exit proc near
+    mov ax,0
+    mov ah,4CH
+    int 21H
+exit endp
+newline proc near
+    push dx
+    push ax
+    mov dl,10
+    mov ah,02H
+    int 21H
+    pop ax
+    pop dx
+    ret
+newline endp
 code ends
 end

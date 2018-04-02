@@ -1,3 +1,3 @@
 @echo off
-td lab1-5.exe > output.txt
+link LAB1-5E.OBJ ZHWKLIB.OBJ; > output.txt
 exit

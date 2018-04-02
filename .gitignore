@@ -6,3 +6,5 @@
 *.td
 *.TR
 *.tr
+*.img
+*.disk
