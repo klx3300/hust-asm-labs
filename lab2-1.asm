@@ -33,7 +33,7 @@ dw 35,56,70,25,0
 db 'book',0
 dw 12,30,25,5,0
 db 'bag',0
-dw 49,60,2000,500,0
+dw 1,2,2000,500,0
 shop1topgoods db maxgoods-3 dup('Invalid Items',0,15,0,20,0,30,0,0,0,0,0)
 shop2name db 'shop2',0
 shop2goods db 'pen',0
@@ -111,15 +111,15 @@ shop1_not_found:
     @strprint <offset good_not_exist_hint>
     jmp query_goods
 shop1_found:
-    mov al,byte ptr[auth]
-    cmp al,0
-    jnz admin_mode
     ;@strprint <bx>
     @strlen <bx>
     ;@newln
     ;@strprint <offset price_hint>
     add bx,ax
     inc bx
+    mov al,byte ptr[auth]
+    cmp al,0
+    jnz admin_mode
     mov cx,word ptr[bx+2]
     ;@printword <cx>
     ;@newln
@@ -248,14 +248,8 @@ recalc_profit endp
 calc_avg proc ; shop1 in si, shop2 in di
     pusha
     mov bx,si
-    @strlen <bx>
-    add bx,ax
-    inc bx
     mov cx,word ptr[bx+8]
     mov bx,di
-    @strlen <bx>
-    add bx,ax
-    inc bx
     mov ax,word ptr[bx+8]
     add ax,cx
     cwd
