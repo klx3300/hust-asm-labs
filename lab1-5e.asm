@@ -41,17 +41,17 @@ pr2 dw 0
 avgpr dw 0
 data ends
 
-extern qmemset:near
-extern qmemcpy:near
-extern qstrlen:near
-extern qstrcmp:near
-extern qstrfcmp:near
-extern qstrprint:near
-extern qprintword:near
-extern qfmtprint:near
-extern qgets:near
-extern exit:near
-extern newline:near
+extern qmemset:far
+extern qmemcpy:far
+extern qstrlen:far
+extern qstrcmp:far
+extern qstrfcmp:far
+extern qstrprint:far
+extern qprintword:far
+extern qfmtprint:far
+extern qgets:far
+extern exit:far
+extern newline:far
 
 code segment para public use16
     assume cs:code,ds:data,ss:stack
@@ -62,61 +62,61 @@ begin:
     mov ds,ax
 restart_auth:
     push offset in_user_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     push offset in_name
-    call near ptr qgets
-    call near ptr qstrlen
+    call far ptr qgets
+    call far ptr qstrlen
     cmp ax,0
     jz guest_mode
     sub sp,-2
     push offset in_name
     push offset quit_str
-    call near ptr qstrfcmp
+    call far ptr qstrfcmp
     sub sp,-4
     cmp ax,0
     jz quit
     push offset in_pass_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     push offset in_passwd
-    call near ptr qgets
+    call far ptr qgets
     sub sp,-2
     push offset in_name
     push offset username
-    call near ptr qstrfcmp
+    call far ptr qstrfcmp
     sub sp,-4
     cmp ax,0
     jnz auth_failed
     push offset in_passwd
     push offset password
-    call near ptr qstrfcmp
+    call far ptr qstrfcmp
     sub sp,-4
     cmp ax,0
     jnz auth_failed
     ; auth succeed!
     mov byte ptr[auth],1
     push offset correct_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     jmp query_goods
 auth_failed:
     push offset incorrect_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     jmp restart_auth
 guest_mode:
     push offset guest_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     mov byte ptr[auth],0
 query_goods:
     push offset in_good_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     push offset in_good
-    call near ptr qgets
-    call near ptr qstrlen
+    call far ptr qgets
+    call far ptr qstrlen
     sub sp,-2
     cmp ax,0
     jz restart_auth
@@ -126,12 +126,12 @@ shop1_search_loop:
     jz shop1_not_found
     push bx
     push offset in_good
-    call near ptr qstrfcmp
+    call far ptr qstrfcmp
     sub sp,-4
     cmp ax,0
     jz shop1_found
     push bx
-    call near ptr qstrlen
+    call far ptr qstrlen
     sub sp,-2
     add bx,ax
     inc bx
@@ -139,7 +139,7 @@ shop1_search_loop:
     jmp shop1_search_loop
 shop1_not_found:
     push offset good_not_exist_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     jmp query_goods
 shop1_found:
@@ -147,37 +147,37 @@ shop1_found:
     cmp al,0
     jnz admin_mode
     push bx
-    call near ptr qstrprint
-    call near ptr qstrlen
+    call far ptr qstrprint
+    call far ptr qstrlen
     sub sp,-2
-    call near ptr newline
+    call far ptr newline
     push offset price_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     add bx,ax
     inc bx
     mov cx,word ptr[bx+2]
     push cx
-    call near ptr qprintword
+    call far ptr qprintword
     sub sp,-2
-    call near ptr newline
+    call far ptr newline
     push offset stock_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     mov cx,word ptr[bx+4]
     mov dx,word ptr[bx+6]
     sub cx,dx
     push cx
-    call near ptr qprintword
+    call far ptr qprintword
     sub sp,-2
     push offset stock_hint_suffix
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 admin_mode:
     push bx
-    call near ptr qstrlen
+    call far ptr qstrlen
     sub sp,-2
     add bx,ax
     inc bx
@@ -208,12 +208,12 @@ shop2_search_loop:
     jz shop2_not_found
     push bx
     push offset in_good
-    call near ptr qstrfcmp
+    call far ptr qstrfcmp
     sub sp,-4
     cmp ax,0
     jz shop2_found
     push bx
-    call near ptr qstrlen
+    call far ptr qstrlen
     sub sp,-2
     add bx,ax
     inc bx
@@ -221,7 +221,7 @@ shop2_search_loop:
     jmp shop2_search_loop
 shop2_not_found:
     push offset good_not_exist_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     jmp query_goods
 shop2_found:
@@ -229,12 +229,12 @@ shop2_found:
     cmp al,0
     jnz admin_mode_continue
     push bx
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     jmp query_goods
 admin_mode_continue:
     push bx
-    call near ptr qstrlen
+    call far ptr qstrlen
     sub sp,-2
     add bx,ax
     inc bx
@@ -266,14 +266,14 @@ admin_mode_continue:
     idiv cx
     mov word ptr[avgpr],ax
     push ax
-    call near ptr qprintword
+    call far ptr qprintword
     sub sp,-2
     push offset profit_pctg_suffix
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
-    call near ptr newline
+    call far ptr newline
     push offset profit_rank_hint
-    call near ptr qstrprint
+    call far ptr qstrprint
     sub sp,-2
     cmp ax,90
     jge class_a
@@ -286,34 +286,34 @@ admin_mode_continue:
     mov dl,'F'
     mov ah,02H
     int 21H
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 class_a:
     mov dl,'A'
     mov ah,02H
     int 21H
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 class_b:
     mov dl,'B'
     mov ah,02H
     int 21H
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 class_c:
     mov dl,'C'
     mov ah,02H
     int 21H
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 class_d:
     mov dl,'D'
     mov ah,02H
     int 21H
-    call near ptr newline
+    call far ptr newline
     jmp query_goods
 quit:
-    call near ptr exit
+    call far ptr exit
     
 code ends
 end begin

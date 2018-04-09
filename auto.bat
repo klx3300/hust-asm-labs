@@ -1,3 +1,3 @@
 @echo off
-link LAB1-5E.OBJ ZHWKLIB.OBJ; > output.txt
+link LAB2-2.OBJ ZHWKTW.OBJ; > output.txt
 exit
