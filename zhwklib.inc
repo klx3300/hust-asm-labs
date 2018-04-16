@@ -14,6 +14,7 @@ extern qtimer_start:far
 extern qtimer_curr:far
 extern qimult:far
 extern qidivid:far
+extern qstrtoword:far
 
 @memset macro addr:req, cont:req, cnt:req
     push cnt
@@ -90,7 +91,7 @@ endm
 endm
 
 @multiply macro a:req, b:req
-    push word 0
+    push 0
     push a
     push b
     call far ptr qimult
@@ -98,10 +99,21 @@ endm
 endm
 
 @divide macro divend:req, divsor:req
-    push word 0
-    push word 0
+    push 0
+    push 0
     push divsor
     push divend
     call far ptr qidivid
     sub sp,-4
+endm
+
+@strtoword macro straddr:req
+    push 0
+    push straddr
+    call far ptr qstrtoword
+    sub sp,-2
+endm
+
+@clstk macro numword:req
+    sub sp,-numword
 endm

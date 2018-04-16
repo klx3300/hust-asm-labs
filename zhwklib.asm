@@ -16,6 +16,7 @@ public qtimer_start
 public qtimer_curr
 public qimult ; word a, word b, word result => result will be saved into result
 public qidivid ; word divend, word divisor, word result-quo, word result-rem
+public qstrtoword ; word straddr, word result => ax: is bad (0 good)
 zhwklib segment para public use16
 qmemset proc far
     push bp
@@ -506,5 +507,42 @@ qidivid proc far
     pop bp
     ret
 qidivid endp
+qstrtoword proc far
+    push bp
+    mov bp,sp
+    pusha
+    mov si,word ptr[bp+retsize+2]
+    mov cx,0
+qstrcnvtloop:
+    mov al,byte ptr[si]
+    cmp al,'0'
+    jl qstrcnvtbad
+    cmp al,'9'
+    jg qstrcnvtbad
+    sub al,'0'
+    mov ah,0
+    push 0
+    push 10
+    push cx
+    call qimult
+    sub sp,-4
+    pop cx
+    add cx,ax
+    inc si
+    jmp qstrcnvtloop
+qstrcnvtbad:
+    mov word ptr[bp+retsize+4],cx
+    cmp al,0
+    jne qstrcnvtill
+    popa
+    mov ax,0
+    jmp qstrcnvtend
+qstrcnvtill:
+    popa
+    mov ax,1
+qstrcnvtend:
+    pop bp
+    ret
+qstrtoword endp
 zhwklib ends
 end
