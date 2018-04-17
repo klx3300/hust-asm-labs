@@ -310,9 +310,91 @@ calc_avg:
     @strprint <offset perm_denied_hint>
     jmp user_menu
 calc_avg_passed:
-    ;for kylerky: after implemented, comment the following line
-    @strprint <offset not_impl_hint>
+    ; @strprint <offset not_impl_hint>
+    ; loop init
+    mov ebx, offset shop1goods
+    cmp ebx, offset shop1topgoods
+    je user_menu
+calc_avg_passed_loop: ; start of the loop
+    @strlen <bx>
+    add bx, ax
+    inc bx
+
+    mov ax, [ebx] ; cost
+    mov dx, [ebx+4] ; in count
+    mul dx
+
+    ; store result in ecx
+    mov cx, dx
+    shl ecx, 10h
+    mov cx, ax
+    ; revenue
+    mov ax, [ebx+2] ; price
+    mov dx, [ebx+6] ; sold count
+    mul dx
+    ; store result in edx
+    shl edx, 10h
+    mov dx, ax
+
+    mov eax, edx
+    sub     eax, ecx ; profit
+    mov     edx, 100
+    imul    edx      ; profit * 100
+
+    idiv ecx
+
+    mov si, ax
+    ; shop 2
+    mov edi, ebx
+    sub ebx, offset shop1goods
+    lea ebx, shop2goods[ebx]
+
+    mov ax, [ebx] ; cost
+    mov dx, [ebx+4] ; in count
+    mul dx
+
+    ; store result in ecx
+    mov cx, dx
+    shl ecx, 10h
+    mov cx, ax
+    ; revenue
+    mov ax, [ebx+2] ; price
+    mov dx, [ebx+6] ; sold count
+    mul dx
+    ; store result in edx
+    shl edx, 10h
+    mov dx, ax
+
+    mov eax, edx
+    sub     eax, ecx ; profit
+    mov     edx, 100
+    imul    edx      ; profit * 100
+
+    idiv ecx
+
+    add ax, si
+
+    test ax, ax
+    js calc_avg_passed_loop_neg_div
+
+    shr ax, 1
+    jmp calc_avg_passed_loop_avg_done
+calc_avg_passed_loop_neg_div:
+    inc ax
+    sar ax, 1
+
+calc_avg_passed_loop_avg_done:
+    mov ebx, edi
+    mov [ebx+8], ax ; store
+
+    ; increment
+    add ebx, 10
+    ; check condition
+    cmp ebx, offset shop1topgoods
+    jne calc_avg_passed_loop
+
     jmp user_menu
+
 calc_rank:
     cmp byte ptr[auth],0
     jnz calc_rank_passed
