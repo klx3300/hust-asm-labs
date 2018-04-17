@@ -395,6 +395,115 @@ calc_avg_passed_loop_avg_done:
 
     jmp user_menu
 
+goods_sort proc
+    ; loop init
+    mov bx, offset shop2goods
+    cmp bx, offset shop2topgoods
+    jne @F
+    ret
+
+    xor cx, cx
+@@:
+    push bx
+    inc cx
+    inc cx
+    @strlen <bx>
+    add bx, ax
+    inc bx
+
+    add bx, 10
+    cmp bx, offset shop2topgoods
+    jne @B
+
+    push cx
+
+    xor edi, edi
+    xor esi, esi
+    mov di, sp
+    mov si, sp
+    add si, cx
+    call goods_qsort_recur
+
+    pop dx
+    xor ecx, ecx
+    mov cx, dx
+    shr cx, 1
+@@:
+    mov ax, [esp+ecx-2]
+    
+    pop ax
+    ; free
+    add sp, ax
+    ret
+endp
+
+goods_qsort_recur proc
+    push ebx
+    ; beg in edi, end in esi
+
+    ; base condition
+    mov eax, esi
+    sub eax, edi
+    cmp eax, 2
+    jg @F
+    pop ebx
+    ret
+@@:
+
+    xor ecx, ecx
+    mov cx, [esi-2] ; pivot pointer
+    @strlen <cx>
+    add cx, ax
+    inc cx
+    add cx, 8
+    mov cx, shop1goods[ecx-shop2goods] ; pivot
+
+    mov eax, edi ; end of < zone
+    mov ebx, eax ; end of >= zone
+
+    push edi ; store beg
+@l1:
+    ; compare
+    xor edx, edx
+    mov dx, [ebx]
+    @strlen <dx>
+    add dx, ax
+    inc dx
+    add dx, 8 ; curr pointer
+    cmp shop1goods[edx-shop2goods], cx
+    jge @F
+    ; swap
+    mov dx, [ebx]
+    mov di, [eax]
+    mov [eax], dx
+    mov [ebx], di
+    add eax, 2
+@@:
+    add ebx, 2
+
+    cmp ebx, esi
+    jne @l1
+
+    ; move pivot
+    mov bx, [eax]
+    mov dx, [esi-2]
+    mov [eax], dx
+    mov [esi-2], bx
+
+    pop edi
+    push eax
+    push esi
+    mov esi, eax
+    call goods_qsort_recur
+    pop esi
+    pop edi
+    add edi, 2
+    call goods_qsort_recur
+
+    pop ebx
+    ret
+endp
+
 calc_rank:
     cmp byte ptr[auth],0
     jnz calc_rank_passed
