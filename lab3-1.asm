@@ -397,11 +397,15 @@ calc_avg_passed_loop_avg_done:
 
 goods_sort proc
     ; loop init
+    push bp
+    mov bp, sp
+
     mov bx, offset shop2goods
     cmp bx, offset shop2topgoods
     jne @F
     ret
 
+@@:
     xor cx, cx
 @@:
     push bx
@@ -409,33 +413,38 @@ goods_sort proc
     inc cx
     @strlen <bx>
     add bx, ax
-    inc bx
 
-    add bx, 10
+    add bx, 0bh
     cmp bx, offset shop2topgoods
     jne @B
-
-    push cx
 
     xor edi, edi
     xor esi, esi
     mov di, sp
     mov si, sp
     add si, cx
+
+    push cx
+
     call goods_qsort_recur
 
-    pop dx
     xor ecx, ecx
-    mov cx, dx
+    pop cx
     shr cx, 1
 @@:
-    mov ax, [esp+ecx-2]
+    xor ebx, ebx
+    mov bx, [esp+ecx*2-2]
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    mov [ebx+8], cx
+    loop @B
     
-    pop ax
     ; free
-    add sp, ax
+    mov sp, bp
+    pop bp
     ret
-endp
+goods_sort endp
 
 goods_qsort_recur proc
     push ebx
@@ -451,32 +460,37 @@ goods_qsort_recur proc
 @@:
 
     xor ecx, ecx
-    mov cx, [esi-2] ; pivot pointer
+    mov cx, ss:[esi-2] ; pivot pointer
     @strlen <cx>
     add cx, ax
     inc cx
     add cx, 8
-    mov cx, shop1goods[ecx-shop2goods] ; pivot
+    mov cx, (shop1goods-shop2goods)[ecx] ; pivot
 
-    mov eax, edi ; end of < zone
-    mov ebx, eax ; end of >= zone
+    mov eax, edi ; end of > zone
+    mov ebx, eax ; end of <= zone
 
     push edi ; store beg
 @l1:
     ; compare
     xor edx, edx
-    mov dx, [ebx]
+    mov dx, ss:[ebx]
+
+    mov edi, eax
+
     @strlen <dx>
     add dx, ax
-    inc dx
-    add dx, 8 ; curr pointer
-    cmp shop1goods[edx-shop2goods], cx
-    jge @F
+    add dx, 9 ; curr pointer
+
+    mov eax, edi
+
+    cmp (shop1goods-shop2goods)[edx], cx
+    jle @F
     ; swap
-    mov dx, [ebx]
-    mov di, [eax]
-    mov [eax], dx
-    mov [ebx], di
+    mov dx, ss:[ebx]
+    mov di, ss:[eax]
+    mov ss:[eax], dx
+    mov ss:[ebx], di
     add eax, 2
 @@:
     add ebx, 2
@@ -485,10 +499,10 @@ goods_qsort_recur proc
     jne @l1
 
     ; move pivot
-    mov bx, [eax]
-    mov dx, [esi-2]
-    mov [eax], dx
-    mov [esi-2], bx
+    mov bx, ss:[eax]
+    mov dx, ss:[esi-2]
+    mov ss:[eax], dx
+    mov ss:[esi-2], bx
 
     pop edi
     push eax
@@ -502,7 +516,7 @@ goods_qsort_recur proc
 
     pop ebx
     ret
-endp
+goods_qsort_recur endp
 
 calc_rank:
     cmp byte ptr[auth],0
@@ -510,8 +524,8 @@ calc_rank:
     @strprint <offset perm_denied_hint>
     jmp user_menu
 calc_rank_passed:
-    ;for kylerky: after implemented, comment the following line
-    @strprint <offset not_impl_hint>
+    ; @strprint <offset not_impl_hint>
+    call goods_sort
     jmp user_menu
 print_all:
     cmp byte ptr[auth],0
