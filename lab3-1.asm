@@ -35,6 +35,8 @@ quit_str db 'q',0
 username db 'Huatian Zhou',0
 password db 'testpasswd',0
 maxgoods equ 10
+print_goods_header db 'name',9,'cost',9,'price',9,'in_cnt',9,'out_cnt',0
+print_goods_header_2 db 'name',9,'profit%',9,'rank',0
 shop1name db 'shop1',0
 shop1goods db 'pen',0
 dw 35,56,70,25,0
@@ -527,14 +529,113 @@ calc_rank_passed:
     ; @strprint <offset not_impl_hint>
     call goods_sort
     jmp user_menu
+
+print_ht macro
+    mov ah, 02h
+    mov dl, 09h
+    int 21h
+endm
+
+print_cr_lf macro
+    mov ah, 02h
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    int 21h
+endm
+
+print_goods proc
+    ; parameter in edix
+    test edi, edi
+    jnz @l1
+    @strprint <offset shop1name>
+    print_cr_lf
+    @strprint <offset print_goods_header>
+    print_cr_lf
+    mov bx, offset shop1goods
+    cmp bx, offset shop1topgoods
+    je @l2
+@l3:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx]>
+    print_ht
+    @printword <word ptr [bx+2]>
+    print_ht
+    @printword <word ptr [bx+4]>
+    print_ht
+    @printword <word ptr [bx+6]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop1topgoods
+    jne @l3
+
+    print_cr_lf
+@l2:
+    @strprint <offset shop2name>
+    print_cr_lf
+    @strprint <offset print_goods_header>
+    print_cr_lf
+    mov bx, offset shop2goods
+    cmp bx, offset shop2topgoods
+    je @l4
+@l5:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx]>
+    print_ht
+    @printword <word ptr [bx+2]>
+    print_ht
+    @printword <word ptr [bx+4]>
+    print_ht
+    @printword <word ptr [bx+6]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop2topgoods
+    jne @l5
+@l4:
+    ret
+@l1:
+    @strprint <offset print_goods_header_2>
+    print_cr_lf
+
+    mov bx, offset shop1goods
+    cmp bx, offset shop1topgoods
+    je @l6
+
+@l7:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx+8]>
+    print_ht
+    @printword <word ptr (shop2goods-shop1goods)[bx+8]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop1topgoods
+    jne @l7
+@l6:
+    ret
+print_goods endp
 print_all:
     cmp byte ptr[auth],0
     jnz print_all_passed
     @strprint <offset perm_denied_hint>
     jmp user_menu
 print_all_passed:
-    ;for kylerky: after implemented, comment the following line
-    @strprint <offset not_impl_hint>
+    ; @strprint <offset not_impl_hint>
+    xor edi, edi
+    call print_goods
+    inc edi
+    call print_goods
     jmp user_menu
 
 quit_prog:
