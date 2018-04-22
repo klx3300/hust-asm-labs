@@ -35,6 +35,8 @@ quit_str db 'q',0
 username db 'Huatian Zhou',0
 password db 'testpasswd',0
 maxgoods equ 10
+print_goods_header db 'name',9,'cost',9,'price',9,'in_cnt',9,'out_cnt',0
+print_goods_header_2 db 'name',9,'profit%',9,'rank',0
 shop1name db 'shop1',0
 shop1goods db 'pen',0
 dw 35,56,70,25,0
@@ -397,11 +399,15 @@ calc_avg_passed_loop_avg_done:
 
 goods_sort proc
     ; loop init
+    push bp
+    mov bp, sp
+
     mov bx, offset shop2goods
     cmp bx, offset shop2topgoods
     jne @F
     ret
 
+@@:
     xor cx, cx
 @@:
     push bx
@@ -409,33 +415,38 @@ goods_sort proc
     inc cx
     @strlen <bx>
     add bx, ax
-    inc bx
 
-    add bx, 10
+    add bx, 0bh
     cmp bx, offset shop2topgoods
     jne @B
-
-    push cx
 
     xor edi, edi
     xor esi, esi
     mov di, sp
     mov si, sp
     add si, cx
+
+    push cx
+
     call goods_qsort_recur
 
-    pop dx
     xor ecx, ecx
-    mov cx, dx
+    pop cx
     shr cx, 1
 @@:
-    mov ax, [esp+ecx-2]
+    xor ebx, ebx
+    mov bx, [esp+ecx*2-2]
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    mov [ebx+8], cx
+    loop @B
     
-    pop ax
     ; free
-    add sp, ax
+    mov sp, bp
+    pop bp
     ret
-endp
+goods_sort endp
 
 goods_qsort_recur proc
     push ebx
@@ -451,32 +462,37 @@ goods_qsort_recur proc
 @@:
 
     xor ecx, ecx
-    mov cx, [esi-2] ; pivot pointer
+    mov cx, ss:[esi-2] ; pivot pointer
     @strlen <cx>
     add cx, ax
     inc cx
     add cx, 8
-    mov cx, shop1goods[ecx-shop2goods] ; pivot
+    mov cx, (shop1goods-shop2goods)[ecx] ; pivot
 
-    mov eax, edi ; end of < zone
-    mov ebx, eax ; end of >= zone
+    mov eax, edi ; end of > zone
+    mov ebx, eax ; end of <= zone
 
     push edi ; store beg
 @l1:
     ; compare
     xor edx, edx
-    mov dx, [ebx]
+    mov dx, ss:[ebx]
+
+    mov edi, eax
+
     @strlen <dx>
     add dx, ax
-    inc dx
-    add dx, 8 ; curr pointer
-    cmp shop1goods[edx-shop2goods], cx
-    jge @F
+    add dx, 9 ; curr pointer
+
+    mov eax, edi
+
+    cmp (shop1goods-shop2goods)[edx], cx
+    jle @F
     ; swap
-    mov dx, [ebx]
-    mov di, [eax]
-    mov [eax], dx
-    mov [ebx], di
+    mov dx, ss:[ebx]
+    mov di, ss:[eax]
+    mov ss:[eax], dx
+    mov ss:[ebx], di
     add eax, 2
 @@:
     add ebx, 2
@@ -485,10 +501,10 @@ goods_qsort_recur proc
     jne @l1
 
     ; move pivot
-    mov bx, [eax]
-    mov dx, [esi-2]
-    mov [eax], dx
-    mov [esi-2], bx
+    mov bx, ss:[eax]
+    mov dx, ss:[esi-2]
+    mov ss:[eax], dx
+    mov ss:[esi-2], bx
 
     pop edi
     push eax
@@ -502,7 +518,7 @@ goods_qsort_recur proc
 
     pop ebx
     ret
-endp
+goods_qsort_recur endp
 
 calc_rank:
     cmp byte ptr[auth],0
@@ -510,17 +526,116 @@ calc_rank:
     @strprint <offset perm_denied_hint>
     jmp user_menu
 calc_rank_passed:
-    ;for kylerky: after implemented, comment the following line
-    @strprint <offset not_impl_hint>
+    ; @strprint <offset not_impl_hint>
+    call goods_sort
     jmp user_menu
+
+print_ht macro
+    mov ah, 02h
+    mov dl, 09h
+    int 21h
+endm
+
+print_cr_lf macro
+    mov ah, 02h
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    int 21h
+endm
+
+print_goods proc
+    ; parameter in edix
+    test edi, edi
+    jnz @l1
+    @strprint <offset shop1name>
+    print_cr_lf
+    @strprint <offset print_goods_header>
+    print_cr_lf
+    mov bx, offset shop1goods
+    cmp bx, offset shop1topgoods
+    je @l2
+@l3:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx]>
+    print_ht
+    @printword <word ptr [bx+2]>
+    print_ht
+    @printword <word ptr [bx+4]>
+    print_ht
+    @printword <word ptr [bx+6]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop1topgoods
+    jne @l3
+
+    print_cr_lf
+@l2:
+    @strprint <offset shop2name>
+    print_cr_lf
+    @strprint <offset print_goods_header>
+    print_cr_lf
+    mov bx, offset shop2goods
+    cmp bx, offset shop2topgoods
+    je @l4
+@l5:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx]>
+    print_ht
+    @printword <word ptr [bx+2]>
+    print_ht
+    @printword <word ptr [bx+4]>
+    print_ht
+    @printword <word ptr [bx+6]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop2topgoods
+    jne @l5
+@l4:
+    ret
+@l1:
+    @strprint <offset print_goods_header_2>
+    print_cr_lf
+
+    mov bx, offset shop1goods
+    cmp bx, offset shop1topgoods
+    je @l6
+
+@l7:
+    @strprint <bx>
+    print_ht
+    @strlen <bx>
+    add bx, ax
+    inc bx
+    @printword <word ptr [bx+8]>
+    print_ht
+    @printword <word ptr (shop2goods-shop1goods)[bx+8]>
+    print_cr_lf
+    add bx, 0ah
+    cmp bx, offset shop1topgoods
+    jne @l7
+@l6:
+    ret
+print_goods endp
 print_all:
     cmp byte ptr[auth],0
     jnz print_all_passed
     @strprint <offset perm_denied_hint>
     jmp user_menu
 print_all_passed:
-    ;for kylerky: after implemented, comment the following line
-    @strprint <offset not_impl_hint>
+    ; @strprint <offset not_impl_hint>
+    xor edi, edi
+    call print_goods
+    inc edi
+    call print_goods
     jmp user_menu
 
 quit_prog:
