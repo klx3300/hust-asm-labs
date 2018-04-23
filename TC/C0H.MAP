@@ -1,0 +1,16 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 0051EH 0051FH _TEXT              CODE
+ 00520H 005BDH 0009EH _DATA              DATA
+ 005BEH 005C1H 00004H _EMUSEG            DATA
+ 005C2H 005C3H 00002H _CRTSEG            DATA
+ 005C4H 005C4H 00000H _CVTSEG            DATA
+ 005C4H 005C4H 00000H _SCNSEG            DATA
+ 005D0H 006B5H 000E6H _STACK             STACK
+ 006B6H 006FBH 00046H _BSS               BSS
+
+Undefined symbol '_MAIN' in module C0H
+Undefined symbol '___BRKLVL' in module BRK
+Program entry point at 0000:0000
+

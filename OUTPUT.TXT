@@ -1,4 +1,5 @@
-
-Microsoft (R) Segmented Executable Linker  Version 5.31.009 Jul 13 1992
-Copyright (C) Microsoft Corp 1984-1992.  All rights reserved.
-
+Turbo C  Version 2.01  Copyright (c) 1987, 1988 Borland International
+Turbo Link  Version 2.0  Copyright (c) 1987, 1988 Borland International
+Undefined symbol '_SCORES' in module zhwktst.c
+
+	Available memory 462710

@@ -241,7 +241,7 @@ ipx=false
 # You can put your MOUNT lines here.
 mount C: "."
 C:
+SET PATH=C:;C:\TC
 AUTO
-
 EXIT
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+cp template.c $1

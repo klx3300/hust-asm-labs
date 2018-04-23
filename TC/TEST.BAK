@@ -1,0 +1,6 @@
+#include <stdio.h>
+#include <string.h>
+int main(void){
+    printf("strlen %d\n",strlen("FUCK"));
+    return 0;
+}
