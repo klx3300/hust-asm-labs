@@ -1,3 +1,3 @@
 @echo off
-tcc ZHWKDATA.OBJ ZHWKTST.OBJ > output.txt
+tcc LAB3.OBJ ZHWKLIBT.OBJ LAB3SUB.OBJ > output.txt
 exit

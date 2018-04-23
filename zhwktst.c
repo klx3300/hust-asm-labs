@@ -1,8 +1,6 @@
 #include <stdio.h>
-#pragma inline
-extern char* SCORES;
+int FUCK(void);
 int main(void){
-    SCORES[0]='F';
-    printf("FUCK TC %s\n",SCORES);
+    printf("FUCK TC %d,%d\n",sizeof(int),FUCK());
 	return 0;
 }

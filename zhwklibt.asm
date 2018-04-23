@@ -1,8 +1,8 @@
-public _QSTRLEN;param list: word straddr; return ax:length
 .386
 retsize equ 2
 public qmemset ;param list: word addr, word size, byte content
 public qmemcpy ;param list: word dstaddr, word srcaddr, word size
+public qstrlen;param list: word straddr; return ax:length
 public qstrcmp ;param list: word strAaddr, word strBaddr; return al: first differ
 public qstrfcmp ;param list: word strAaddr, word strBaddr; return al: first differ
 public qstrprint ;param list: word straddr
@@ -19,7 +19,7 @@ public qidivid ; word divend, word divisor, word result-quo, word result-rem
 public qstrtoword ; word straddr, word result => ax: is bad (0 good)
 _TEXT segment use16 byte public 'code' 
 assume cs:_TEXT
-qmemset proc near c
+qmemset proc near
     push bp
     mov bp,sp
     push bx
@@ -42,7 +42,7 @@ _qmemset_exit:
     pop bp
     ret
 qmemset endp
-qmemcpy proc near c
+qmemcpy proc near
     push bp
     mov bp,sp
     push bx
@@ -67,7 +67,7 @@ _qmemcpy_exit:
     pop bp
     ret
 qmemcpy endp
-_QSTRLEN proc near c
+qstrlen proc near
     push bp
     mov bp,sp
     push bx
@@ -88,8 +88,8 @@ _qstrlen_exit:
     pop bx
     pop bp
     ret
-_QSTRLEN endp
-qstrcmp proc near c
+qstrlen endp
+qstrcmp proc near
     push bp
     mov bp,sp
     push bx
@@ -124,7 +124,7 @@ _qstrcmp_exit:
     pop bp
     ret
 qstrcmp endp
-qstrfcmp proc near c
+qstrfcmp proc near
     push bp
     mov bp,sp
     push bx
@@ -141,11 +141,11 @@ qstrfcmp proc near c
     cmp ax,0
     jnz _qstrfcmp_fail
     push bx
-    call _qstrlen
+    call qstrlen
     sub sp,-2
     mov cx,ax
     push si
-    call _qstrlen
+    call qstrlen
     sub sp,-2
     mov dx,ax
     sub cx,dx
@@ -161,7 +161,7 @@ _qstrfcmp_fail:
     pop bp
     ret
 qstrfcmp endp
-qstrprint proc near c
+qstrprint proc near
     push bp
     mov bp,sp
     push bx
@@ -183,7 +183,7 @@ _qstrprint_exit:
     pop bp
     ret
 qstrprint endp
-qprintword proc near c
+qprintword proc near
     push bp
     mov bp,sp
     push ax
@@ -231,7 +231,7 @@ _qprintword_stop:
     pop bp
 ret
 qprintword endp
-qfmtprint proc near c
+qfmtprint proc near
     push bp
     mov bp,sp
     push bx
@@ -329,7 +329,7 @@ _qfmtprint_end:
     pop bp
     ret
 qfmtprint endp
-qgets proc near c
+qgets proc near
     push bp
     mov bp,sp
     push cx
@@ -381,12 +381,12 @@ _qgets_cploop:
     pop bp
     ret
 qgets endp
-exit proc near c
+exit proc near
     mov ax,0
     mov ah,4CH
     int 21H
 exit endp
-newline proc near c
+newline proc near
     push dx
     push ax
     mov dl,10
@@ -396,7 +396,7 @@ newline proc near c
     pop dx
     ret
 newline endp
-qtimer_start proc near c
+qtimer_start proc near
     push bp
     mov bp,sp
     push cx
@@ -410,7 +410,7 @@ qtimer_start proc near c
     pop bp
     ret
 qtimer_start endp
-qtimer_curr proc near c
+qtimer_curr proc near
     push bp
     mov bp,sp
     push cx
@@ -430,7 +430,7 @@ qtimer_curr proc near c
     pop bp
     ret
 qtimer_curr endp
-qtimer	proc near c
+qtimer	proc near
 	PUSH  DX
 	PUSH  CX
 	PUSH  BX
@@ -482,7 +482,7 @@ _TS	DW    ?
  	DB    'Time elapsed in ms is '
 _TMSG	DB    12 DUP(0)
 qtimer  ENDP
-qimult proc near c
+qimult proc near
     push bp
     mov bp,sp
     pusha
@@ -494,7 +494,7 @@ qimult proc near c
     pop bp
     ret
 qimult endp
-qidivid proc near c
+qidivid proc near
     push bp
     mov bp,sp
     pusha
@@ -508,7 +508,7 @@ qidivid proc near c
     pop bp
     ret
 qidivid endp
-qstrtoword proc near c
+qstrtoword proc near
     push bp
     mov bp,sp
     pusha
