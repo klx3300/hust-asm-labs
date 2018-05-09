@@ -7,6 +7,7 @@ public qstrcmp ;param list: word strAaddr, word strBaddr; return al: first diffe
 public qstrfcmp ;param list: word strAaddr, word strBaddr; return al: first differ
 public qstrprint ;param list: word straddr
 public qprintword ; param list byte
+public qprinthex ; like above
 public qfmtprint ;param list: word fmtstraddr, ...; return ax: succeed length
 public qgets ; param list: word bufferaddr
 public exit
@@ -230,6 +231,53 @@ _qprintword_stop:
     pop bp
 ret
 qprintword endp
+qprinthex proc far
+    push bp
+    mov bp,sp
+    push ax
+    mov ax,word ptr[bp+retsize+2]
+    push bx
+    mov bx,0 ; status accumulator
+    push dx
+    push cx
+    mov cx,0
+    mov dx,0
+_qprinthex_divloop:
+    mov bx,16
+    div bx
+    push dx
+    mov dx,0
+    inc cx
+    cmp ax,bx
+    jge _qprinthex_divloop
+    push ax
+    inc cx
+_qprinthex_prloop:
+    cmp cx,0
+    jz _qprinthex_stop
+    pop dx
+    mov dh,0
+    cmp dx,10
+    jge _qprinthex_prhex
+    add dl,'0'
+    mov ah,02h
+    int 21h
+    dec cx
+    jmp _qprinthex_prloop
+_qprinthex_prhex:
+    add dl,'A'-10
+    mov ah,02h
+    int 21h
+    dec cx
+    jmp _qprinthex_prloop
+_qprinthex_stop:
+    pop cx
+    pop dx
+    pop bx
+    pop ax
+    pop bp
+ret
+qprinthex endp
 qfmtprint proc far
     push bp
     mov bp,sp

@@ -1,3 +1,3 @@
 @echo off
-tcc LAB3.OBJ ZHWKLIBT.OBJ LAB3SUB.OBJ > output.txt
+link LAB4-2.OBJ CIPHER.OBJ ZHWKLIB.OBJ; > output.txt
 exit

@@ -5,6 +5,7 @@ extern qstrcmp:far
 extern qstrfcmp:far
 extern qstrprint:far
 extern qprintword:far
+extern qprinthex:far
 extern qfmtprint:far
 extern qgets:far
 extern exit:far
@@ -61,6 +62,12 @@ endm
 @printword macro wd:req
     push wd
     call far ptr qprintword
+    sub sp,-2
+endm
+
+@printhex macro wd:req
+    push wd
+    call far ptr qprinthex
     sub sp,-2
 endm
 
