@@ -1,0 +1,17 @@
+SysMenu MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",10001
+    END
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "L&ist",20001
+        MENUITEM "A&verage",20002
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "A&bout",30001
+    END
+END
+
